@@ -42,7 +42,7 @@ du -hd0 ~/.cltcache
 
 Static code analysis of C++ code can consume more time and power than compilation while producing a lot smaller output files, especially when no warnings and errors were generated.
 The output is also basically never consumed by a customer, which means it is not as important to ensure that the integrity of the cache is intact.
-For these reasons static code analysis should be is a much better match for caching than compilation is.
+For these reasons static code analysis should be a much better match for caching than compilation is.
 Because clang-tidy is probably used in tons of CI-pipelines around the world, it should be possible to save tons of energy by caching the results.
 
 ## How?
