@@ -41,7 +41,7 @@ du -hd0 ~/.cltcache
 ## Why?
 
 Static code analysis of C++ code can consume more time and power than compilation while producing a lot smaller output files, especially when no warnings and errors were generated.
-The output is also basically never consumed by a customer, which means it is not as important to ensure that the integrity of the cache is intact.
+The output is also basically never consumed by a customer, which means it is not as important to ensure the correctness of the cache.
 For these reasons static code analysis should be a much better match for caching than compilation is.
 Because clang-tidy is probably used in tons of CI-pipelines around the world, it should be possible to save tons of energy by caching the results.
 
@@ -65,12 +65,12 @@ graph LR;
 
 ## Caveats
 
-### Integrity
+### Correctness
 
 cltcache assumes that identical preprocessor output, clang-tidy version and enabled checks will produce identical results, which is not a guarantee.
-One such case is if a result-filtered header is moved to a path where its warnings and errors are no longer filtered.
+One such case is if a filtered header is moved to a path where its warnings and errors would no longer be filtered.
 If you are concerned about this, you should probably reconsider your priorities.
-Relying upon clang-tidy to the point where the its integrity is more important than the environment is rarely a sustainable strategy.
+Relying upon clang-tidy to the point where its correctness is more important than time, money and the environment, is rarely a sustainable strategy.
 
 ### Ouptut order
 

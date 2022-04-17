@@ -43,7 +43,7 @@ def sha256file(filename):
     with open(filename, "rb") as f:
         m = hashlib.sha256()
         while True:
-            contents = f.read(1 << 16)
+            contents = f.read(65536)
             if not contents:
                 return m.hexdigest()
             m.update(contents)
@@ -83,7 +83,9 @@ def get_preproc_hash(compile_args):
     if "-o" in compile_args:
         oflag_index = compile_args.index('-o')
         preproc_filename = compile_args[oflag_index + 1] + "-cltcache.i"
-    compile_args[oflag_index + 1] = preproc_filename
+        compile_args[oflag_index + 1] = preproc_filename
+    else:
+        compile_args = ["-o", preproc_filename] + compile_args
     preproc_flag = "-E"
     keep_comments_flag = "-CC"
     run_get_stdout(
