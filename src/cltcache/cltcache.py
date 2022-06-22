@@ -83,7 +83,7 @@ def get_preproc_hash(compile_args, config):
         config.getboolean("preprocessor", "ignore_errors", fallback=False))
     verbose = config.getboolean("behavior", "verbose", fallback=False)
     if verbose:
-        print(preproc_source)
+        print("Length of preproccesed source:", len(preproc_source))
     preproc_hash = sha256(preproc_source)
     return preproc_hash
 
