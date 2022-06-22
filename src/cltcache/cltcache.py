@@ -130,6 +130,8 @@ def cache_clang_tidy(clang_tidy_call):
         out_path = cache_path.with_suffix(".out.gz")
         err_path = cache_path.with_suffix(".err.gz")
         if os.path.exists(cache_path):
+            if verbose:
+                print("cltcache hit!")
             if os.path.exists(out_path):
                 clang_tidy_stdout = decompress_from_file(out_path)
                 if clang_tidy_stdout:
@@ -139,6 +141,8 @@ def cache_clang_tidy(clang_tidy_call):
                 if clang_tidy_stderr:
                     print(clang_tidy_stderr.decode("utf-8"), file=sys.stderr,)
             sys.exit(int(read_from_file(cache_path)))
+        else if verbose:
+            print("cltcache miss!")
     except Exception as e:
         if verbose:
             print(e, file=sys.stderr,)
