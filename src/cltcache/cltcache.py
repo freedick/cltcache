@@ -123,10 +123,14 @@ def cache_clang_tidy(clang_tidy_call):
     cltcache_path, config = init_cltcache()
     cache_path, cat_path, out_path, err_path = (None, None, None, None)
     verbose = config.getboolean("behavior", "verbose", fallback=False)
+    if verbose:
+        print("cltcache computing cache key")
     try:
         cache_key = compute_cache_key(clang_tidy_call, config)
-        cache_path = cat_path / cache_key
+        if verbose:
+            print("cltcache key:", cache_key)
         cat_path = cltcache_path / cache_key[0]
+        cache_path = cat_path / cache_key
         out_path = cache_path.with_suffix(".out.gz")
         err_path = cache_path.with_suffix(".err.gz")
         if os.path.exists(cache_path):
@@ -145,7 +149,7 @@ def cache_clang_tidy(clang_tidy_call):
             print("cltcache miss...")
     except Exception as e:
         if verbose:
-            print("cltcache", e, file=sys.stderr)
+            print("cltcache", e)
             print(
                 "cltcache Preprocessing failed! Forwarding call without caching...",
                 file=sys.stderr)
@@ -166,7 +170,7 @@ def cache_clang_tidy(clang_tidy_call):
             compress_to_file(result.stderr, err_path)
     if cache_results:
         if verbose:
-            print("cltcache caching results")
+            print("cltcache caching results...")
         save_to_file(str(result.returncode), cache_path)
     sys.exit(result.returncode)
 
