@@ -83,7 +83,7 @@ def get_preproc_hash(compile_args, config):
         config.getboolean("preprocessor", "ignore_errors", fallback=False))
     verbose = config.getboolean("behavior", "verbose", fallback=False)
     if verbose:
-        print("Length of preproccesed source:", len(preproc_source))
+        print("cltcache length of preproccesed source:", len(preproc_source))
     preproc_hash = sha256(preproc_source)
     return preproc_hash
 
@@ -142,12 +142,12 @@ def cache_clang_tidy(clang_tidy_call):
                     print(clang_tidy_stderr.decode("utf-8"), file=sys.stderr,)
             sys.exit(int(read_from_file(cache_path)))
         else if verbose:
-            print("cltcache miss!")
+            print("cltcache miss...")
     except Exception as e:
         if verbose:
-            print(e, file=sys.stderr,)
+            print("cltcache", e, file=sys.stderr,)
             print(
-                "Preprocessing failed! Forwarding call without caching...", file=sys.stderr,)
+                "cltcache Preprocessing failed! Forwarding call without caching...", file=sys.stderr,)
     result = run_command(clang_tidy_call)
     clt_success = result.returncode == 0
     preproc_success = cache_path is not None
@@ -165,7 +165,7 @@ def cache_clang_tidy(clang_tidy_call):
             compress_to_file(result.stderr, err_path)
     if cache_results:
         if verbose:
-            print("Caching results")
+            print("cltcache caching results")
         save_to_file(str(result.returncode), cache_path)
     sys.exit(result.returncode)
 
