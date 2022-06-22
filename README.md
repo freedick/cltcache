@@ -38,6 +38,11 @@ Check the disk usage of the cache using this command:
 du -hd0 ~/.cltcache
 ```
 
+## Configuration
+
+There are some configuration options which are loaded from ~/.cltcache/cltcache.cfg by default.
+See the example configuration file [here](cltcache.cfg) for more information about them.
+
 ## Why?
 
 Static code analysis of C++ code can consume more time and power than compilation while producing a lot smaller output files, especially when no warnings and errors were generated.
