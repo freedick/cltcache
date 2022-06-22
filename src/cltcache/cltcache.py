@@ -145,10 +145,10 @@ def cache_clang_tidy(clang_tidy_call):
             print("cltcache miss...")
     except Exception as e:
         if verbose:
-            print("cltcache", e, file=sys.stderr,)
+            print("cltcache", e, file=sys.stderr)
             print(
                 "cltcache Preprocessing failed! Forwarding call without caching...",
-                file=sys.stderr,)
+                file=sys.stderr)
     result = run_command(clang_tidy_call)
     clt_success = result.returncode == 0
     preproc_success = cache_path is not None
