@@ -78,8 +78,9 @@ def get_preproc_hash(compile_args, config):
     preproc_flag = "-E"
     keep_comments_flag = config.get(
         "preprocessor", "preserve_comments", fallback="-C")
+    preproc_command = config.get("preprocessor", "command", fallback="c++")
     preproc_source = run_get_stdout(
-        ["g++"] + compile_args + [preproc_flag, keep_comments_flag],
+        [preproc_command] + compile_args + [preproc_flag, keep_comments_flag],
         config.getboolean("preprocessor", "ignore_errors", fallback=False))
     verbose = config.getboolean("behavior", "verbose", fallback=False)
     if verbose:
