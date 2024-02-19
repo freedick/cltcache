@@ -73,6 +73,25 @@ def remove_o_flag(compile_args):
     return compile_args
 
 
+def postprocess_source(source, config):
+    def hash_replace(match):
+        return match.group(0).replace(match.group(1), len(match.group(1)) * "0")
+    replacements = []
+    if config.get("preprocessor", "strip_string_versions", fallback=True):
+        replacements.append(
+            (r'("[^"^\n]*?)([0-9]+(\.[0-9]+)+)', r'\1<version>'))
+    if config.get("preprocessor", "strip_string_hex_hashes", fallback=True):
+        replacements.append((r'"[^"^\n]*?([0-9a-fA-F]{5,128})', hash_replace))
+    for pattern, replacement in replacements:
+        changedSource = re.sub(pattern, replacement, source)
+        attempts = 0
+        while changedSource != source and attempts < 20:
+            source = changedSource
+            changedSource = re.sub(pattern, replacement, source)
+            attempts += 1
+    return source
+
+
 def get_preproc_hash(compile_args, config):
     compile_args = remove_o_flag(compile_args)
     preproc_flag = "-E"
@@ -85,7 +104,10 @@ def get_preproc_hash(compile_args, config):
     verbose = config.getboolean("behavior", "verbose", fallback=False)
     if verbose:
         print("cltcache length of preproccesed source:", len(preproc_source))
-    preproc_hash = sha256(preproc_source)
+    postproc_source = postprocess_source(preproc_source, config)
+    if verbose:
+        print("cltcache length of postproccesed source:", len(postproc_source))
+    preproc_hash = sha256(postproc_source)
     return preproc_hash
 
 
