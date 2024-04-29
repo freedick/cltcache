@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import configparser
+import json
 
 
 def save_to_file_raw(data, filename):
@@ -99,7 +100,7 @@ def get_preproc_hash(compile_args, config):
         "preprocessor", "preserve_comments", fallback="-C")
     preproc_command = config.get("preprocessor", "command", fallback="c++")
     preproc_source = run_get_stdout(
-        [preproc_command] + compile_args + [preproc_flag, keep_comments_flag],
+        preproc_command.split() + compile_args + [preproc_flag, keep_comments_flag],
         config.getboolean("preprocessor", "ignore_errors", fallback=False))
     verbose = config.getboolean("behavior", "verbose", fallback=False)
     if verbose:
@@ -113,24 +114,68 @@ def get_preproc_hash(compile_args, config):
 
 def compute_cache_key(clang_tidy_call, config):
     clang_tidy = clang_tidy_call[0]
-    if "--" not in clang_tidy_call:
-        raise Exception("Missing '--' flag in compiler options")
 
-    forwardflag_index = clang_tidy_call.index("--")
-    compile_args = clang_tidy_call[forwardflag_index + 1:]
-    clang_tidy_args = clang_tidy_call[1:forwardflag_index]
+    clang_tidy_args_with_value = ["--checks", "--config", "--config-file", "--export-fixes", "--extra-arg", "--extra-arg-before", "--format-style", "--header-filter", "--line-filter", "--load", "--store-check-profile", "--vfsoverlay", "--warnings-as-errors"]
+    
+    build_path_next_arg = False
+    build_path_value = None
+    clang_tidy_files = []
+    ignore_next_arg = False
+    compile_args = None
+    arg_index = 0
+    for arg in clang_tidy_call[1:]:
+        arg_index += 1
+        if ignore_next_arg:
+            ignore_next_arg = False
+            break
+        if build_path_next_arg:
+            build_path_value = arg
+            build_path_next_arg = False
+        elif not arg.startswith("-"):
+            clang_tidy_files.append(arg)
+        elif (arg == "-p"):
+            build_path_next_arg = True
+        elif arg.startswith("-p="):
+            build_path_value = arg[3:]
+        elif (arg == "--"):
+            compile_args = clang_tidy_call[arg_index + 1:]
+            break
+        elif arg in clang_tidy_args_with_value:
+            ignore_next_arg = True
 
+    if (compile_args is None) and (build_path_value is None):
+        raise Exception("Could not read compilation arguments: use either '--' or '-p' mechanisms")
+
+    clang_tidy_args = clang_tidy_call[1:arg_index]
+
+    if build_path_value is not None:
+        if not clang_tidy_files:
+            raise Exception("No source file found: this is required when using the build patch mechanism")
+        if len(clang_tidy_files) != 1 :
+            raise Exception("cltcache does not support multiple files processing")
+        clang_tidy_file = clang_tidy_files[0]
+        compile_commands_file = open(os.path.dirname(build_path_value)+"/compile_commands.json")
+        compile_commands = json.load(compile_commands_file)
+        for command in compile_commands:
+            if command['file'] == clang_tidy_file:
+                compile_args = command['command'].split()
+                break
+        compile_commands_file.close()
+
+    if compile_args is None:
+        raise Exception("No compilation found for source file")
+    
     preproc_hash = get_preproc_hash(compile_args, config)
 
     version_out = run_get_stdout([clang_tidy] + ["--version"])
     version = ",".join(re.findall(r'[0-9]+\.[0-9]+\.?[0-9]*', version_out))
     version_hash = sha256(version)
 
-    enabled_checks = run_get_stdout(
-        [clang_tidy] + clang_tidy_args + ["--list-checks"])
-    enabled_checks_hash = sha256(enabled_checks)
+    clang_config = run_get_stdout(
+        [clang_tidy] + clang_tidy_args + ["--dump-config"])
+    clang_config_hash = sha256(clang_config)
 
-    return sha256(preproc_hash + enabled_checks_hash + version_hash)[:-16]
+    return sha256(preproc_hash + clang_config_hash + version_hash)[:-16]
 
 
 def init_cltcache():
