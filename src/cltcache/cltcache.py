@@ -126,11 +126,11 @@ def compute_cache_key(clang_tidy_call, config):
     version = ",".join(re.findall(r'[0-9]+\.[0-9]+\.?[0-9]*', version_out))
     version_hash = sha256(version)
 
-    enabled_checks = run_get_stdout(
-        [clang_tidy] + clang_tidy_args + ["--list-checks"])
-    enabled_checks_hash = sha256(enabled_checks)
+    clang_tidy_config = run_get_stdout(
+        [clang_tidy] + clang_tidy_args + ["--dump-config"])
+    clang_tidy_config_hash = sha256(clang_tidy_config)
 
-    return sha256(preproc_hash + enabled_checks_hash + version_hash)[:-16]
+    return sha256(preproc_hash + clang_tidy_config_hash + version_hash)[:-16]
 
 
 def init_cltcache():
